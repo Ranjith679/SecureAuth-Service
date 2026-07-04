@@ -25,7 +25,10 @@ public class CustomUserDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
 
         // Later we'll support multiple roles.
-        return List.of(new SimpleGrantedAuthority(user.getRole().name()));
+        //note spring security will expect ROLE_ as prefix to any role
+        return List.of(
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+        );
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.secureauth.secure_auth_service.controller;
 
+import com.secureauth.secure_auth_service.common.ApiResponse;
 import com.secureauth.secure_auth_service.dto.request.LoginRequest;
 import com.secureauth.secure_auth_service.dto.request.RegisterRequest;
 import com.secureauth.secure_auth_service.dto.response.LoginResponse;
@@ -20,18 +21,28 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public String register(@Valid @RequestBody RegisterRequest request){
+    public ApiResponse<Object> register(@Valid @RequestBody RegisterRequest request){
 
         authService.register(request);
 
-        return "User registered successfully";
+        return ApiResponse.builder()
+                .success(true)
+                .message("User registered successfully")
+                .data(null)
+                .build();
+
     }
 
     @PostMapping("/login")
-    public LoginResponse login(
-            @Valid @RequestBody LoginRequest request){
+    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request){
 
-        return authService.login(request);
+        LoginResponse response = authService.login(request);
+
+        return ApiResponse.<LoginResponse>builder()
+                .success(true)
+                .message("Login successful")
+                .data(response)
+                .build();
 
     }
 }

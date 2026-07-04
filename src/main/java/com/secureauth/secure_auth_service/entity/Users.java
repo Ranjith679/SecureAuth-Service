@@ -35,15 +35,19 @@ public class Users {
     private String password;
 
     // Used later for email verification
+    @Builder.Default
     private boolean enabled = true;
 
     // Used later to lock suspicious accounts
+    @Builder.Default
     private boolean accountLocked = false;
 
     // LOCAL, GOOGLE, GITHUB (future)
+    @Builder.Default
     private String provider = "LOCAL";
 
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private UserRole role = UserRole.USER;
 
     private LocalDateTime createdAt;
