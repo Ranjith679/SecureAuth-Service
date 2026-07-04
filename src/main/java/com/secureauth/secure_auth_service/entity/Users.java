@@ -1,4 +1,5 @@
 package com.secureauth.secure_auth_service.entity;
+import com.secureauth.secure_auth_service.constants.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -41,6 +42,9 @@ public class Users {
 
     // LOCAL, GOOGLE, GITHUB (future)
     private String provider = "LOCAL";
+
+    @Enumerated(EnumType.STRING)
+    private UserRole role = UserRole.USER;
 
     private LocalDateTime createdAt;
 
