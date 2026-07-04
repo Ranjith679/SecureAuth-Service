@@ -4,6 +4,7 @@ import com.secureauth.secure_auth_service.common.ApiResponse;
 import com.secureauth.secure_auth_service.dto.request.LoginRequest;
 import com.secureauth.secure_auth_service.dto.request.RegisterRequest;
 import com.secureauth.secure_auth_service.dto.response.LoginResponse;
+import com.secureauth.secure_auth_service.security.jwt.JwtService;
 import com.secureauth.secure_auth_service.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -14,9 +15,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtService jwtService;
 
-    public AuthController(AuthService authService){
+    public AuthController(AuthService authService, JwtService jwtService){
         this.authService = authService;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/register")
@@ -43,6 +46,18 @@ public class AuthController {
                 .message("Login successful")
                 .data(response)
                 .build();
+
+    }
+
+    @GetMapping("/token-info")
+    public String tokenInfo(
+            @RequestHeader("Authorization")
+            String authHeader){
+
+        String token =
+                authHeader.substring(7);
+
+        return jwtService.extractUsername(token);
 
     }
 }

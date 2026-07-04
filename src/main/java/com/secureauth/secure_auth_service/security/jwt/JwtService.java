@@ -1,5 +1,8 @@
 package com.secureauth.secure_auth_service.security.jwt;
 
+import com.secureauth.secure_auth_service.exception.InvalidCredentialsException;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,6 +12,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.function.Function;
 
 @Service
 public class JwtService {
@@ -54,6 +58,88 @@ public class JwtService {
                 .signWith(getSigningKey())
 
                 .compact();
+    }
+
+    /**
+     * Extract any claim from JWT.
+     *
+     * This method is generic so we can reuse
+     * it for username, expiration, roles etc.
+     */
+    public <T> T extractClaim(String token, Function<Claims,T> resolver){
+
+        Claims claims = extractAllClaims(token);
+
+        return resolver.apply(claims);
+
+    }
+
+    /**
+     * Reads JWT
+     * Verifies signature automatically
+     * Returns payload (claims)
+     */
+    private Claims extractAllClaims(String token){
+
+        try{
+
+            return Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+        }catch(JwtException ex){
+
+            throw new InvalidCredentialsException(
+                    "Invalid JWT Token"
+            );
+
+        }
+
+    }
+
+    /**
+     * Returns email stored inside JWT.
+     */
+    public String extractUsername(String token){
+
+        return extractClaim(
+                token,
+                Claims::getSubject
+        );
+
+    }
+
+    public Date extractExpiration(String token){
+
+        return extractClaim(
+                token,
+                Claims::getExpiration
+        );
+
+    }
+
+    /**
+     * Checks whether token has expired.
+     */
+    private boolean isTokenExpired(String token){
+
+        return extractExpiration(token)
+                .before(new Date());
+
+    }
+
+    /**
+     * Validates whether JWT belongs
+     * to this user and is still valid.
+     */
+    public boolean isTokenValid(String token, UserDetails userDetails){
+
+        String username = extractUsername(token);
+
+        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+
     }
 
 }
