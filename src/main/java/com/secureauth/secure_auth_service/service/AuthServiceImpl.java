@@ -7,6 +7,8 @@ import com.secureauth.secure_auth_service.entity.Users;
 import com.secureauth.secure_auth_service.exception.EmailAlreadyExistsException;
 import com.secureauth.secure_auth_service.exception.InvalidCredentialsException;
 import com.secureauth.secure_auth_service.repository.UsersRepository;
+import com.secureauth.secure_auth_service.security.jwt.JwtService;
+import com.secureauth.secure_auth_service.security.user.CustomUserDetails;
 import com.secureauth.secure_auth_service.service.AuthService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,11 +22,13 @@ public class AuthServiceImpl implements AuthService {
     private final UsersRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
-    public AuthServiceImpl(UsersRepository repository, PasswordEncoder passwordEncoder , AuthenticationManager authenticationManager) {
+    public AuthServiceImpl(UsersRepository repository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -54,11 +58,7 @@ public class AuthServiceImpl implements AuthService {
          *
          * This token is NOT authenticated yet.
          */
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                );
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
 
         /*
          * Ask Spring Security to authenticate the user.
@@ -74,9 +74,19 @@ public class AuthServiceImpl implements AuthService {
 
             Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
-            System.out.println(authentication);
 
-            return new LoginResponse("Login Successful");
+            /*
+             * After successful authentication,
+             * Spring returns the authenticated user.
+             */
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+            /*
+             * Generate JWT.
+             */
+            String token = jwtService.generateToken(userDetails);
+
+            return new LoginResponse(token);
 
         } catch (Exception e) {
 
