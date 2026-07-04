@@ -1,7 +1,6 @@
-package com.secureauth.secure_auth_service.service;
+package com.secureauth.secure_auth_service.security.user;
 
 import com.secureauth.secure_auth_service.repository.UsersRepository;
-import com.secureauth.secure_auth_service.security.CustomUserDetails;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package com.secureauth.secure_auth_service.security;
+package com.secureauth.secure_auth_service.security.user;
 
 import com.secureauth.secure_auth_service.entity.Users;
 import org.springframework.security.core.GrantedAuthority;

@@ -1,6 +1,8 @@
 package com.secureauth.secure_auth_service.controller;
 
+import com.secureauth.secure_auth_service.dto.request.LoginRequest;
 import com.secureauth.secure_auth_service.dto.request.RegisterRequest;
+import com.secureauth.secure_auth_service.dto.response.LoginResponse;
 import com.secureauth.secure_auth_service.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -24,5 +26,12 @@ public class AuthController {
 
         return "User registered successfully";
     }
-    // Notice @Valid—this triggers Bean Validation before the service runs.
+
+    @PostMapping("/login")
+    public LoginResponse login(
+            @Valid @RequestBody LoginRequest request){
+
+        return authService.login(request);
+
+    }
 }
