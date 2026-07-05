@@ -34,11 +34,7 @@ public class SecurityConfig {
                     )
                     .authenticationProvider(authenticationProvider)
                     .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                    .authorizeHttpRequests(auth->
-                            auth.requestMatchers("/api/v1/auth/**", "/h2-console/**").permitAll()
-                                    .anyRequest()
-                                    .authenticated()
-                    )
+                    .authorizeHttpRequests(auth-> auth.requestMatchers("/api/v1/auth/register", "/api/v1/auth/login").permitAll().requestMatchers("/h2-console/**").permitAll().anyRequest().authenticated())
                     .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                     .build();
         }

@@ -4,10 +4,15 @@ import com.secureauth.secure_auth_service.common.ApiResponse;
 import com.secureauth.secure_auth_service.dto.request.LoginRequest;
 import com.secureauth.secure_auth_service.dto.request.RegisterRequest;
 import com.secureauth.secure_auth_service.dto.response.LoginResponse;
+import com.secureauth.secure_auth_service.dto.response.UserResponse;
+import com.secureauth.secure_auth_service.entity.Users;
 import com.secureauth.secure_auth_service.security.jwt.JwtService;
+import com.secureauth.secure_auth_service.security.user.CustomUserDetails;
 import com.secureauth.secure_auth_service.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -61,8 +66,32 @@ public class AuthController {
 
     // test endpoint to ensure jwt filter applies before it reaches to endpoint
     @GetMapping("/profile")
+    @PreAuthorize("hasRole('USER')")
     public String profile(){
 
         return "Welcome User";
     }
+
+    @GetMapping("/me")
+    public ApiResponse<UserResponse> currentUser(@AuthenticationPrincipal CustomUserDetails userDetails){
+
+        Users user = userDetails.getUser();
+
+        UserResponse response =
+                UserResponse.builder()
+                        .id(user.getId())
+                        .firstName(user.getFirstName())
+                        .lastName(user.getLastName())
+                        .email(user.getEmail())
+                        .role(user.getRole().name())
+                        .build();
+
+        return ApiResponse.<UserResponse>builder()
+                .success(true)
+                .message("Current user fetched successfully")
+                .data(response)
+                .build();
+
+    }
+
 }
