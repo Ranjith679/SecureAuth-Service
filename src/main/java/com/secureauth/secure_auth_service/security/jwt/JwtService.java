@@ -23,6 +23,9 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private long expiration;
 
+    @Value("${jwt.refresh-expiration}")
+    private long refreshExpiration;
+
     /**
      * Method which returns SecretKey using Keys builder + our secrete string for passing to jwt builder
      */
@@ -139,6 +142,32 @@ public class JwtService {
         String username = extractUsername(token);
 
         return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+
+    }
+
+    /*
+     * Creates refresh token.
+     * Very similar to access token,
+     * but lives much longer.
+     */
+    public String generateRefreshToken(UserDetails userDetails){
+
+        Date now = new Date();
+
+        Date expiry =
+                new Date(now.getTime()+refreshExpiration);
+
+        return Jwts.builder()
+
+                .subject(userDetails.getUsername())
+
+                .issuedAt(now)
+
+                .expiration(expiry)
+
+                .signWith(getSigningKey())
+
+                .compact();
 
     }
 

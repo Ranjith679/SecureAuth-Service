@@ -1,20 +1,24 @@
 package com.secureauth.secure_auth_service.service;
 
 import com.secureauth.secure_auth_service.dto.request.LoginRequest;
+import com.secureauth.secure_auth_service.dto.request.RefreshTokenRequest;
 import com.secureauth.secure_auth_service.dto.request.RegisterRequest;
 import com.secureauth.secure_auth_service.dto.response.LoginResponse;
+import com.secureauth.secure_auth_service.entity.RefreshToken;
 import com.secureauth.secure_auth_service.entity.Users;
 import com.secureauth.secure_auth_service.exception.EmailAlreadyExistsException;
 import com.secureauth.secure_auth_service.exception.InvalidCredentialsException;
+import com.secureauth.secure_auth_service.repository.RefreshTokenRepository;
 import com.secureauth.secure_auth_service.repository.UsersRepository;
 import com.secureauth.secure_auth_service.security.jwt.JwtService;
 import com.secureauth.secure_auth_service.security.user.CustomUserDetails;
-import com.secureauth.secure_auth_service.service.AuthService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -23,12 +27,14 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    public AuthServiceImpl(UsersRepository repository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService) {
+    public AuthServiceImpl(UsersRepository repository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService, RefreshTokenRepository refreshTokenRepository) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @Override
@@ -84,9 +90,32 @@ public class AuthServiceImpl implements AuthService {
             /*
              * Generate JWT.
              */
-            String token = jwtService.generateToken(userDetails);
+            String accessToken = jwtService.generateToken(userDetails);
+            String refreshToken = jwtService.generateRefreshToken(userDetails);
 
-            return new LoginResponse(token);
+            RefreshToken token =
+                    RefreshToken.builder()
+
+                            .token(refreshToken)
+
+                            .user(userDetails.getUser())
+
+                            .expiryDate(
+                                    LocalDateTime.now()
+                                            .plusDays(7)
+                            )
+
+                            .build();
+
+            refreshTokenRepository.save(token);
+
+            return LoginResponse.builder()
+
+                    .accessToken(accessToken)
+
+                    .refreshToken(refreshToken)
+
+                    .build();
 
         } catch (Exception e) {
 
@@ -94,4 +123,70 @@ public class AuthServiceImpl implements AuthService {
         }
 
     }
+
+    @Override
+    public LoginResponse refreshToken(RefreshTokenRequest request) {
+        /*
+         * Find refresh token in database.
+         */
+        RefreshToken refresh =
+                refreshTokenRepository
+                        .findByToken(request.getRefreshToken())
+                        .orElseThrow(() ->
+                                new InvalidCredentialsException(
+                                        "Invalid refresh token"));
+
+        /*
+         * Check whether token is revoked.
+         */
+        if(refresh.isRevoked()){
+
+            throw new InvalidCredentialsException(
+                    "Refresh token revoked");
+        }
+
+        /*
+         * Load user.
+         */
+        CustomUserDetails userDetails =
+                new CustomUserDetails(
+                        refresh.getUser());
+
+        /*
+         * Generate new access token.
+         */
+        String accessToken =
+                jwtService.generateToken(userDetails);
+
+        return LoginResponse.builder()
+
+                .accessToken(accessToken)
+
+                .refreshToken(request.getRefreshToken())
+
+                .build();
+    }
+
+    @Override
+    public void logout(
+            Authentication authentication){
+
+        /*
+         * Current logged-in user.
+         */
+        CustomUserDetails user =
+                (CustomUserDetails)
+                        authentication.getPrincipal();
+
+        /*
+         * Remove all refresh tokens.
+         */
+        refreshTokenRepository
+                .deleteByUserId(
+                        user.getUser().getId()
+                );
+
+    }
+
+
 }

@@ -2,6 +2,7 @@ package com.secureauth.secure_auth_service.controller;
 
 import com.secureauth.secure_auth_service.common.ApiResponse;
 import com.secureauth.secure_auth_service.dto.request.LoginRequest;
+import com.secureauth.secure_auth_service.dto.request.RefreshTokenRequest;
 import com.secureauth.secure_auth_service.dto.request.RegisterRequest;
 import com.secureauth.secure_auth_service.dto.response.LoginResponse;
 import com.secureauth.secure_auth_service.dto.response.UserResponse;
@@ -12,6 +13,7 @@ import com.secureauth.secure_auth_service.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -94,4 +96,39 @@ public class AuthController {
 
     }
 
+    @PostMapping("/refresh")
+    public ApiResponse<LoginResponse> refreshToken(
+            @RequestBody RefreshTokenRequest request){
+
+        LoginResponse response =
+                authService.refreshToken(request);
+
+        return ApiResponse.<LoginResponse>builder()
+
+                .success(true)
+
+                .message("Access token refreshed")
+
+                .data(response)
+
+                .build();
+
+    }
+
+    @PostMapping("/logout")
+    public ApiResponse<Object> logout(Authentication authentication){
+
+        authService.logout(authentication);
+
+        return ApiResponse.builder()
+
+                .success(true)
+
+                .message("Logout Successful")
+
+                .data(null)
+
+                .build();
+
+    }
 }
