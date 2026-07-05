@@ -49,15 +49,20 @@ public class AuthController {
 
     }
 
+    // test endpoint for read JWT and return a clain (sub)
     @GetMapping("/token-info")
-    public String tokenInfo(
-            @RequestHeader("Authorization")
-            String authHeader){
+    public String tokenInfo(@RequestHeader("Authorization") String authHeader){
 
-        String token =
-                authHeader.substring(7);
+        String token = authHeader.substring(7);
 
         return jwtService.extractUsername(token);
 
+    }
+
+    // test endpoint to ensure jwt filter applies before it reaches to endpoint
+    @GetMapping("/profile")
+    public String profile(){
+
+        return "Welcome User";
     }
 }
