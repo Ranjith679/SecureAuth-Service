@@ -42,9 +42,7 @@ public class JwtService {
 
         Date now = new Date();
 
-        Date expiry = new Date(
-                now.getTime() + expiration
-        );
+        Date expiry = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
 
@@ -154,19 +152,13 @@ public class JwtService {
 
         Date now = new Date();
 
-        Date expiry =
-                new Date(now.getTime()+refreshExpiration);
+        Date expiry = new Date(now.getTime()+refreshExpiration);
 
         return Jwts.builder()
-
                 .subject(userDetails.getUsername())
-
                 .issuedAt(now)
-
                 .expiration(expiry)
-
                 .signWith(getSigningKey())
-
                 .compact();
 
     }

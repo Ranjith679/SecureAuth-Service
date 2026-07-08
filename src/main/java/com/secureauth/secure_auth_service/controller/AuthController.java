@@ -10,6 +10,8 @@ import com.secureauth.secure_auth_service.entity.Users;
 import com.secureauth.secure_auth_service.security.jwt.JwtService;
 import com.secureauth.secure_auth_service.security.user.CustomUserDetails;
 import com.secureauth.secure_auth_service.service.AuthService;
+import com.secureauth.secure_auth_service.service.RefreshTokenService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,10 +25,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
-    public AuthController(AuthService authService, JwtService jwtService){
+    public AuthController(AuthService authService, JwtService jwtService,RefreshTokenService refreshTokenService){
         this.authService = authService;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @PostMapping("/register")
@@ -44,15 +48,11 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request){
+    public LoginResponse login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest) {
 
-        LoginResponse response = authService.login(request);
-
-        return ApiResponse.<LoginResponse>builder()
-                .success(true)
-                .message("Login successful")
-                .data(response)
-                .build();
+        return authService.login(request, httpRequest);
 
     }
 
@@ -97,21 +97,9 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ApiResponse<LoginResponse> refreshToken(
-            @RequestBody RefreshTokenRequest request){
+    public LoginResponse refresh(@RequestBody RefreshTokenRequest request){
 
-        LoginResponse response =
-                authService.refreshToken(request);
-
-        return ApiResponse.<LoginResponse>builder()
-
-                .success(true)
-
-                .message("Access token refreshed")
-
-                .data(response)
-
-                .build();
+        return refreshTokenService.rotateRefreshToken(request);
 
     }
 
