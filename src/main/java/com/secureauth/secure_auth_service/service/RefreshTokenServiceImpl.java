@@ -4,6 +4,7 @@ import com.secureauth.secure_auth_service.dto.request.RefreshTokenRequest;
 import com.secureauth.secure_auth_service.dto.response.LoginResponse;
 import com.secureauth.secure_auth_service.entity.RefreshToken;
 import com.secureauth.secure_auth_service.entity.Users;
+import com.secureauth.secure_auth_service.exception.RefreshTokenRevokedException;
 import com.secureauth.secure_auth_service.repository.RefreshTokenRepository;
 import com.secureauth.secure_auth_service.repository.UsersRepository;
 import com.secureauth.secure_auth_service.security.jwt.JwtService;
@@ -79,7 +80,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                         .orElseThrow(() ->new RuntimeException("Invalid Refresh Token"));
 
         if(refreshToken.isRevoked()){
-            throw new RuntimeException("Refresh Token Revoked");
+            throw new RefreshTokenRevokedException("Refresh Token Revoked");
         }
 
         if(refreshToken.getExpiresAt().isBefore(LocalDateTime.now())){
@@ -120,5 +121,22 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 .accessToken(accessToken)
                 .refreshToken(newRefreshToken)
                 .build();
+    }
+
+    /*
+     * Revokes every refresh token
+     * belonging to the same family.
+     */
+    private void revokeTokenFamily(UUID familyId) {
+
+        int revokedCount =
+                repository.revokeEntireFamily(familyId);
+
+        System.out.println(
+                "Revoked " +
+                        revokedCount +
+                        " refresh tokens."
+        );
+
     }
 }

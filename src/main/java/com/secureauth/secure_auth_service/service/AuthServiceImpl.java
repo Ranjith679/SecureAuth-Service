@@ -14,6 +14,7 @@ import com.secureauth.secure_auth_service.repository.UsersRepository;
 import com.secureauth.secure_auth_service.security.jwt.JwtService;
 import com.secureauth.secure_auth_service.security.user.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -127,6 +128,7 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Override
+    @Transactional
     public void logout(
             Authentication authentication){
 

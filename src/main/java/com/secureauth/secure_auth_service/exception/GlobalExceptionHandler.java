@@ -71,14 +71,9 @@ public class GlobalExceptionHandler {
      * @NotBlank, @Email, @Size
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Object>>
-    validation(
-            MethodArgumentNotValidException ex){
+    public ResponseEntity<ApiResponse<Object>> validation(MethodArgumentNotValidException ex){
 
-        String message =
-                ex.getBindingResult()
-                        .getFieldError()
-                        .getDefaultMessage();
+        String message = ex.getBindingResult().getFieldError().getDefaultMessage();
 
         ApiResponse<Object> response =
                 ApiResponse.builder()
@@ -91,6 +86,19 @@ public class GlobalExceptionHandler {
                 .badRequest()
                 .body(response);
 
+    }
+
+    /**
+     * Handle refresh token revoked
+     */
+
+    @ExceptionHandler(RefreshTokenRevokedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleExpiredRefreshToken(RefreshTokenRevokedException ex){
+        String message = ex.getMessage();
+
+        ApiResponse<Object> response= ApiResponse.builder().success(false).message(message).data(null).build();
+
+        return ResponseEntity.badRequest().body(response);
     }
 
 }
