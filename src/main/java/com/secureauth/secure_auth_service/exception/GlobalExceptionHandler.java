@@ -92,13 +92,21 @@ public class GlobalExceptionHandler {
      * Handle refresh token revoked
      */
 
-    @ExceptionHandler(RefreshTokenRevokedException.class)
-    public ResponseEntity<ApiResponse<Object>> handleExpiredRefreshToken(RefreshTokenRevokedException ex){
-        String message = ex.getMessage();
+    @ExceptionHandler(TokenReuseDetectedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleTokenReuse(
+            TokenReuseDetectedException ex) {
 
-        ApiResponse<Object> response= ApiResponse.builder().success(false).message(message).data(null).build();
+        ApiResponse response =
+                ApiResponse.builder()
+                        .success(false)
+                        .message(ex.getMessage())
+                        .data(null)
+                        .build();
 
-        return ResponseEntity.badRequest().body(response);
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(response);
     }
+
 
 }

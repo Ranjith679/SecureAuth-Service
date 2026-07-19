@@ -27,6 +27,10 @@ public interface RefreshTokenRepository
      */
     void deleteByFamilyId(UUID familyId);
 
+    /*
+     * Revoke every refresh token
+     * belonging to the same family.
+     */
     @Modifying
     @Query("""
             UPDATE RefreshToken r
